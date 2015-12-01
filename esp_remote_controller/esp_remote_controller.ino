@@ -9,16 +9,23 @@
 #include <ESP8266WiFi.h>
 
 // Fill in your own network info
+/*
 const char* ssid     = "YourNetworwSSID";
 const char* password = "YourNetworkPassword";
+*/
+const char* ssid     = "AloeZanzibar";
+const char* password = "al0ev3ra";
 
 // Change the host and port to suite your needs.
 const char* HOST = "192.168.1.104";
 const int PORT = 5000;
 
 // set the endpoints for each button.
-String BTN_1_TRIGGER_URL = "/team1";
-String BTN_0_TRIGGER_URL = "/team2";
+String BTN_1_TRIGGER_URL = "/team2";
+String BTN_0_TRIGGER_URL = "/team1";
+
+String BTN_1_LONG_PRESS_TRIGGER_URL = "/team2minus";
+String BTN_0_LONG_PRESS_TRIGGER_URL = "/team1minus";
 
 
 int BTN_1_PIN = 2;
@@ -27,6 +34,12 @@ int BTN_0_PIN = 0;
 int BTN_1_PREV = HIGH;
 int BTN_0_PREV = HIGH;
 
+
+unsigned long BTN_1_DOWN_TIME = 0;
+unsigned long BTN_0_DOWN_TIME = 0;
+
+unsigned long time_of_press = 0;
+unsigned long cur_time = 0;
 
 void http_get(const char* host, int port, String url){
      // Use WiFiClient class to create TCP connections
@@ -86,13 +99,52 @@ void loop() {
   int cur1 = digitalRead(BTN_1_PIN);
   int cur0 = digitalRead(BTN_0_PIN);
 
+  /* 
+   *  check if buttons were pressed down 
+   */
   if ((cur1 == LOW) && (BTN_1_PREV == HIGH)){
-    http_get(HOST, PORT, BTN_1_TRIGGER_URL);
+    time_of_press = millis();
+    BTN_1_DOWN_TIME = time_of_press;
   }
 
   if ((cur0 == LOW) && (BTN_0_PREV == HIGH)){
-    http_get(HOST, PORT, BTN_0_TRIGGER_URL);
+    time_of_press = millis();
+    BTN_0_DOWN_TIME = time_of_press;
   }
+
+  /*
+   * check if buttons were released
+   */
+
+  if ((cur1 == HIGH) && (BTN_1_PREV == LOW)){
+    // Determine if long press or short press
+    cur_time = millis();
+    if((cur_time - BTN_1_DOWN_TIME) < 750){
+      http_get(HOST, PORT, BTN_1_TRIGGER_URL);
+    }
+  }
+
+  if ((cur0 == HIGH) && (BTN_0_PREV == LOW)){
+    // Determine if long press or short press
+    cur_time = millis();
+    if((cur_time - BTN_0_DOWN_TIME) < 750){
+      http_get(HOST, PORT, BTN_0_TRIGGER_URL);
+    }
+  }
+
+  /* Check if buttons have been held down 
+   *  
+   */
+
+   cur_time = millis();
+   
+   if ((cur0==LOW) && ((cur_time - BTN_0_DOWN_TIME) > 750)){
+      http_get(HOST, PORT, BTN_0_LONG_PRESS_TRIGGER_URL);
+   }
+   if ((cur1==LOW) && ((cur_time - BTN_1_DOWN_TIME) > 750)){
+      http_get(HOST, PORT, BTN_1_LONG_PRESS_TRIGGER_URL);
+   }
+
 
   BTN_1_PREV = cur1;
   BTN_0_PREV = cur0;
