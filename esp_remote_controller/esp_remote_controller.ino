@@ -9,12 +9,11 @@
 #include <ESP8266WiFi.h>
 
 // Fill in your own network info
-/*
+
 const char* ssid     = "YourNetworwSSID";
 const char* password = "YourNetworkPassword";
-*/
-const char* ssid     = "AloeZanzibar";
-const char* password = "al0ev3ra";
+
+
 
 // Change the host and port to suite your needs.
 const char* HOST = "192.168.1.104";
@@ -27,6 +26,8 @@ String BTN_0_TRIGGER_URL = "/team1";
 String BTN_1_LONG_PRESS_TRIGGER_URL = "/team2minus";
 String BTN_0_LONG_PRESS_TRIGGER_URL = "/team1minus";
 
+// endpoint for hello action. Gets called once at end of startup.
+ String HELLO_URL = "/hello";
 
 int BTN_1_PIN = 2;
 int BTN_0_PIN = 0;
@@ -93,6 +94,12 @@ void setup() {
 
   pinMode(BTN_1_PIN, INPUT_PULLUP);
   pinMode(BTN_0_PIN, INPUT_PULLUP);
+
+  // say hi
+  if (HELLO_URL != ""){
+    http_get(HOST, PORT, HELLO_URL);
+  }
+  
 }
 
 void loop() {
