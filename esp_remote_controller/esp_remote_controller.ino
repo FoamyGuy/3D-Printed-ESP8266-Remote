@@ -9,10 +9,8 @@
 #include <ESP8266WiFi.h>
 
 // Fill in your own network info
-
 const char* ssid     = "YourNetworwSSID";
 const char* password = "YourNetworkPassword";
-
 
 
 // Change the host and port to suite your needs.
@@ -28,6 +26,10 @@ String BTN_0_LONG_PRESS_TRIGGER_URL = "/team1minus";
 
 // endpoint for hello action. Gets called once at end of startup.
  String HELLO_URL = "/hello";
+
+// endpoint for 'poke' action that controller will send after
+// 5 minutes of inactivity.
+String POKE_URL = "/poke";
 
 int BTN_1_PIN = 2;
 int BTN_0_PIN = 0;
@@ -146,15 +148,26 @@ void loop() {
    cur_time = millis();
    
    if ((cur0==LOW) && ((cur_time - BTN_0_DOWN_TIME) > 750)){
+      time_of_press = millis();
       http_get(HOST, PORT, BTN_0_LONG_PRESS_TRIGGER_URL);
    }
    if ((cur1==LOW) && ((cur_time - BTN_1_DOWN_TIME) > 750)){
+      time_of_press = millis();
       http_get(HOST, PORT, BTN_1_LONG_PRESS_TRIGGER_URL);
    }
 
 
   BTN_1_PREV = cur1;
   BTN_0_PREV = cur0;
+
+  // Check idle time. Send poke action.
+  if ((cur_time - time_of_press) > (1000 * 60 * 5) && (time_of_press > 0)){
+    http_get(HOST, PORT, POKE_URL);
+
+    // poke again in 1min
+    time_of_press = time_of_press + (1000 * 60);
+  }
+  
   delay(100);
 }
 
